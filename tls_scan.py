@@ -95,3 +95,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# TODO(t1r3d): Enrich the log and add more commandline options(-c ciphersuites, -o outputfile), Enable the multi-target mode.
