@@ -5,6 +5,7 @@
 
 __author__ = "t1r3d"
 
+import argparse
 import socket
 import ssl
 import pprint
@@ -15,8 +16,11 @@ context.verify_mode = ssl.CERT_REQUIRED
 context.check_hostname = True
 context.load_default_certs()
 
+# Load the cipher suites
+with open("ciphersuites.txt", "rt") as f:
+    cipher_suites = [c.strip() for c in f.readlines()]
 
-def tls_scan(target, cipher_suites):
+def tls_scan(target, port=443, cipher_suites=cipher_suites):
     """Collect the cipher suites and certificates for a single target.
     
     Enumerate by controlling that every ClientHello message contains only one cipher suite.
@@ -38,7 +42,7 @@ def tls_scan(target, cipher_suites):
     result = {}
     for cipher_suite in cipher_suites:
         context.set_ciphers(cipher_suite)
-        with socket.create_connection((target, 443)) as sock:
+        with socket.create_connection((target, port)) as sock:
             with context.wrap_socket(sock, server_hostname=target,  do_handshake_on_connect=False) as ssock:
                 try:
                     ssock.do_handshake()
@@ -46,7 +50,7 @@ def tls_scan(target, cipher_suites):
                 except ssl.SSLError as e:
                     print(e)
     result["support_cipher_suites"] = support_cipher_suites
-    result["certificate"] = ssl.get_server_certificate((target, 443))
+    result["certificate"] = ssl.get_server_certificate((target, port))
     return result
     
 
@@ -64,13 +68,28 @@ $$$$$$$$/ $$ |      /$$$$$$  |     /$$$$$$  |  _______   ______   _______
                             """)
 
 
+def init():
+    """Init the argsparser.
+
+    Return:
+        Argument Object.
+    """
+    parser = argparse.ArgumentParser(description="A TLS information scanner.(Only cipher suites and certificates are collected currently.)")
+    parser.add_argument("-p", "--port", dest="port", help="The port on which the HTTPS service is running.")
+    parser.add_argument("target", help="The target domain name.")
+    args = parser.parse_args()
+
+    return args
+
+
 def main():
     banner()
-    target = "www.github.com"
-    with open("ciphersuites.txt", "rt") as f:
-        cipher_suites = [c.strip() for c in f.readlines()]
-    print(cipher_suites)
-    result = tls_scan(target, cipher_suites)
+    args = init()
+    target = args.target
+    if args.port:
+        port = args.port
+        result = tls_scan(target, port)
+    result = tls_scan(target)
     pprint.pprint(result)
 
 
