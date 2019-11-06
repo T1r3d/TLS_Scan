@@ -10,7 +10,7 @@ Update the ciphersuites.txt by runing the following command in your linux shell.
 Env requirements:
 - OpenSSL
 - Python3
-
+```
 usage: tls_scan.py [-h] [-p PORT] [-v] target
 
 positional arguments:
@@ -20,3 +20,4 @@ optional arguments:
   -h, --help            show this help message and exit
   -p PORT, --port PORT  The port on which the HTTPS service is running.
   -v, --verbose         Enable the verbose log.
+```
